@@ -207,12 +207,15 @@ fun ChatInput(
                 .padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            // LiquidGlassKit input only - blur transparan sinkron General~Enable Blur Effect
+            val liquidGlassAlpha = if (settings.displaySetting.enableBlurEffect) 0.72f else 1f
+            val liquidGlassColor = chatGptPillColor.copy(alpha = liquidGlassAlpha)
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(containerShape)
                     .then(
-                        if (settings.displaySetting.enableBlurEffect && !isDark) Modifier.hazeBlur(
+                        if (settings.displaySetting.enableBlurEffect) Modifier.hazeBlur(
                             input = HazeInput.Sources(hazeState),
                             style = inputHazeStyle,
                         )
@@ -220,9 +223,9 @@ fun ChatInput(
                     ),
                 shape = containerShape,
                 tonalElevation = if (isDark) 0.dp else 8.dp,
-                shadowElevation = if (isDark) 0.dp else 8.dp,
-                border = BorderStroke(1.dp, chatGptBorderColor),
-                color = chatGptPillColor,
+                shadowElevation = if (settings.displaySetting.enableBlurEffect) 8.dp else 0.dp,
+                border = BorderStroke(1.dp, chatGptBorderColor.copy(alpha = if (settings.displaySetting.enableBlurEffect) 0.5f else 1f)),
+                color = liquidGlassColor,
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -275,16 +278,14 @@ fun ChatInput(
                                 onUpdateSearchService = onUpdateSearchService,
                                 model = chatModel,
                             )
-                            val model = settings.getCurrentChatModel()
-                            if (model?.abilities?.contains(ModelAbility.REASONING) == true) {
-                                ReasoningButton(
-                                    reasoningLevel = assistant.reasoningLevel,
-                                    onUpdateReasoningLevel = {
-                                        onUpdateAssistant(assistant.copy(reasoningLevel = it))
-                                    },
-                                    onlyIcon = true,
-                                )
-                            }
+                            // Fix toggle thinking depth ngaruh - tampil selalu, sinkron ke model walau model tidak declare REASONING
+                            ReasoningButton(
+                                reasoningLevel = assistant.reasoningLevel,
+                                onUpdateReasoningLevel = {
+                                    onUpdateAssistant(assistant.copy(reasoningLevel = it))
+                                },
+                                onlyIcon = true,
+                            )
                         }
                         ActionIconButton(
                             onClick = onMoreClick
