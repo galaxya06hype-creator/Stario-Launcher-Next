@@ -133,14 +133,18 @@ fun ChatInput(
 ) {
     val toaster = LocalToaster.current
     val assistant = settings.getCurrentAssistant()
-    // Fix isDark pakai LocalDarkMode - anti artefak, fitur bawaan tetap
+    // LiquidGlassKit regular: glassThickness 10, refractive 1.5, blur 0.3, tint dark rgba(0,0.05,0.1,0.8) light rgba(0.9,0.95,1,0.8)
     val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
-    val chatGptPillColor = if (isDark) androidx.compose.ui.graphics.Color(0xFF2F2F2F) else androidx.compose.ui.graphics.Color(0xFFFFFFFF)
-    val chatGptBorderColor = if (isDark) androidx.compose.ui.graphics.Color(0xFF424242) else androidx.compose.ui.graphics.Color(0xFFE5E5E5)
-    val hazeTintColor = chatGptPillColor
+    val liquidGlassTintDark = androidx.compose.ui.graphics.Color(0xCC0A1419) // 0,12,25 alpha 0.80
+    val liquidGlassTintLight = androidx.compose.ui.graphics.Color(0xCCE6F2FF) // 230,242,255 alpha 0.80
+    val chatGptPillColorBase = if (isDark) liquidGlassTintDark else liquidGlassTintLight
+    val chatGptBorderColor = if (isDark) androidx.compose.ui.graphics.Color(0x33FFFFFF) else androidx.compose.ui.graphics.Color(0x4DFFFFFF) // fresnel edge
+    val hazeTintColor = chatGptPillColorBase
     val inputHazeStyle = HazeBlurStyle.Material3 {
-        blurRadius(12.dp)
+        blurRadius(20.dp) // LiquidGlass blurRadius 0.3 * scale ~20dp agar refraksi terlihat di AMOLED
     }
+    // sync dengan General~Enable Blur Effect: OFF = opaque solid, ON = Liquid Glass transparan + blur
+    val useLiquidGlass = settings.displaySetting.enableBlurEffect
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
@@ -207,24 +211,26 @@ fun ChatInput(
                 .padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // LiquidGlassKit input only - blur transparan sinkron General~Enable Blur Effect
-            val liquidGlassAlpha = if (settings.displaySetting.enableBlurEffect) 0.72f else 1f
-            val liquidGlassColor = chatGptPillColor.copy(alpha = liquidGlassAlpha)
+            // Liquid Glass input only - sinkron Enable Blur Effect (repo LiquidGlassKit regular)
+            // OFF = opaque solid #2F2F2F/#FFFFFF, ON = Liquid Glass blur 20dp + tint 0.52 + fresnel border
+            val liquidGlassAlpha = if (useLiquidGlass) 0.52f else 1f
+            val fallbackSolid = if (isDark) androidx.compose.ui.graphics.Color(0xFF2F2F2F) else androidx.compose.ui.graphics.Color.White
+            val liquidGlassColor = if (useLiquidGlass) chatGptPillColorBase.copy(alpha = liquidGlassAlpha) else fallbackSolid
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(containerShape)
                     .then(
-                        if (settings.displaySetting.enableBlurEffect) Modifier.hazeBlur(
+                        if (useLiquidGlass) Modifier.hazeBlur(
                             input = HazeInput.Sources(hazeState),
                             style = inputHazeStyle,
                         )
                         else Modifier
                     ),
                 shape = containerShape,
-                tonalElevation = if (isDark) 0.dp else 8.dp,
-                shadowElevation = if (settings.displaySetting.enableBlurEffect) 8.dp else 0.dp,
-                border = BorderStroke(1.dp, chatGptBorderColor.copy(alpha = if (settings.displaySetting.enableBlurEffect) 0.5f else 1f)),
+                tonalElevation = if (useLiquidGlass) 12.dp else 0.dp,
+                shadowElevation = if (useLiquidGlass) 12.dp else 0.dp,
+                border = BorderStroke(1.dp, chatGptBorderColor),
                 color = liquidGlassColor,
             ) {
                 Column(
