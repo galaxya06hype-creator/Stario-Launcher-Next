@@ -140,15 +140,15 @@ jobs:
           ./gradlew assembleRelease --stacktrace
           echo "=== APKs built (release only) ==="
           ls -lh app/build/outputs/apk/release/ || true
-          # keep only universal APK to avoid 200MB bloat (splits abi)
-          # RikkaHub splits arm64-v8a + x86_64 + universal = 3 APKs, we keep universal only = 1 APK
-          if ls app/build/outputs/apk/release/*universal*.apk 1>/dev/null 2>&1; then
-            echo "Keeping universal APK only"
-            ls app/build/outputs/apk/release/*universal*.apk
+          # keep only arm64-v8a APK (Meta arm64) biar 1 APK kecil, tidak bengkak 200MB
+          # RikkaHub splits arm64-v8a + x86_64 + universal = 3 APKs, we keep arm64 only = 1 APK
+          if ls app/build/outputs/apk/release/*arm64*.apk 1>/dev/null 2>&1; then
+            echo "Keeping arm64-v8a APK only"
+            ls app/build/outputs/apk/release/*arm64*.apk
             mkdir -p /tmp/single-apk
-            cp app/build/outputs/apk/release/*universal*.apk /tmp/single-apk/rikkahub-release.apk
+            cp app/build/outputs/apk/release/*arm64*.apk /tmp/single-apk/rikkahub-arm64.apk
             rm app/build/outputs/apk/release/*.apk
-            mv /tmp/single-apk/rikkahub-release.apk app/build/outputs/apk/release/
+            mv /tmp/single-apk/rikkahub-arm64.apk app/build/outputs/apk/release/
           elif ls app/build/outputs/apk/release/*.apk 1>/dev/null 2>&1; then
             echo "No universal, keep first APK only"
             ls -lh app/build/outputs/apk/release/*.apk
