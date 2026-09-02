@@ -133,24 +133,15 @@ fun ChatInput(
 ) {
     val toaster = LocalToaster.current
     val assistant = settings.getCurrentAssistant()
-    // LiquidGlassKit regular: glassThickness 10, refractive 1.5, blur 0.3, tint dark rgba(0,0.05,0.1,0.8) light rgba(0.9,0.95,1,0.8)
-    val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
-    val liquidGlassTintDark = androidx.compose.ui.graphics.Color(0xCC0A1419) // 0,12,25 alpha 0.80
-    val liquidGlassTintLight = androidx.compose.ui.graphics.Color(0xCCE6F2FF) // 230,242,255 alpha 0.80
-    val chatGptPillColorBase = if (isDark) liquidGlassTintDark else liquidGlassTintLight
-    val chatGptBorderColor = if (isDark) androidx.compose.ui.graphics.Color(0x33FFFFFF) else androidx.compose.ui.graphics.Color(0x4DFFFFFF) // fresnel edge
-    val hazeTintColor = chatGptPillColorBase
+    val hazeTintColor = MaterialTheme.colorScheme.surfaceContainerLow
     val inputHazeStyle = HazeBlurStyle.Material3 {
-        blurRadius(20.dp) // LiquidGlass blurRadius 0.3 * scale ~20dp agar refraksi terlihat di AMOLED
+        blurRadius(12.dp)
     }
-    // sync dengan General~Enable Blur Effect: OFF = opaque solid, ON = Liquid Glass transparan + blur
-    val useLiquidGlass = settings.displaySetting.enableBlurEffect
 
     val keyboardController = LocalSoftwareKeyboardController.current
     val focusManager = LocalFocusManager.current
 
-    // ChatGPT 100% pill 28dp radius
-    val containerShape = androidx.compose.foundation.shape.RoundedCornerShape(28.dp)
+    val containerShape = MaterialTheme.shapes.largeIncreased
     val modelListState = rememberModelListState(
         modelId = assistant.chatModelId ?: settings.chatModelId,
         providers = settings.providers,
@@ -211,27 +202,21 @@ fun ChatInput(
                 .padding(bottom = 8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Liquid Glass input only - sinkron Enable Blur Effect (repo LiquidGlassKit regular)
-            // OFF = opaque solid #2F2F2F/#FFFFFF, ON = Liquid Glass blur 20dp + tint 0.52 + fresnel border
-            val liquidGlassAlpha = if (useLiquidGlass) 0.52f else 1f
-            val fallbackSolid = if (isDark) androidx.compose.ui.graphics.Color(0xFF2F2F2F) else androidx.compose.ui.graphics.Color.White
-            val liquidGlassColor = if (useLiquidGlass) chatGptPillColorBase.copy(alpha = liquidGlassAlpha) else fallbackSolid
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(containerShape)
                     .then(
-                        if (useLiquidGlass) Modifier.hazeBlur(
+                        if (settings.displaySetting.enableBlurEffect) Modifier.hazeBlur(
                             input = HazeInput.Sources(hazeState),
                             style = inputHazeStyle,
                         )
                         else Modifier
                     ),
                 shape = containerShape,
-                tonalElevation = if (useLiquidGlass) 12.dp else 0.dp,
-                shadowElevation = if (useLiquidGlass) 12.dp else 0.dp,
-                border = BorderStroke(1.dp, chatGptBorderColor),
-                color = liquidGlassColor,
+                tonalElevation = 0.dp,
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                color = if (settings.displaySetting.enableBlurEffect) Color.Transparent else hazeTintColor,
             ) {
                 Column(
                     modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -254,18 +239,20 @@ fun ChatInput(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        // Restore fitur bawaan: Model + Search + Reasoning tetap di bar (tidak hilang)
                         Row(
                             modifier = Modifier
                                 .weight(1f)
                                 .horizontalScroll(rememberScrollState()),
                             horizontalArrangement = Arrangement.spacedBy(2.dp)
                         ) {
+                            // Model Picker
                             ModelSelectorButton(
                                 state = modelListState,
                                 onlyIcon = true,
                                 modifier = Modifier,
                             )
+
+                            // Search
                             val enableSearchMsg = stringResource(R.string.web_search_enabled)
                             val disableSearchMsg = stringResource(R.string.web_search_disabled)
                             val chatModel = settings.getCurrentChatModel()
@@ -278,13 +265,18 @@ fun ChatInput(
                                     toaster.show(
                                         message = if (enabled) enableSearchMsg else disableSearchMsg,
                                         duration = 1.seconds,
-                                        type = if (enabled) ToastType.Success else ToastType.Normal
+                                        type = if (enabled) {
+                                            ToastType.Success
+                                        } else {
+                                            ToastType.Normal
+                                        }
                                     )
                                 },
                                 onUpdateSearchService = onUpdateSearchService,
                                 model = chatModel,
                             )
-                            // Fix toggle thinking depth ngaruh - tampil selalu, sinkron ke model walau model tidak declare REASONING
+
+                            // Fix toggle thinking depth ngaruh - tampil selalu
                             ReasoningButton(
                                 reasoningLevel = assistant.reasoningLevel,
                                 onUpdateReasoningLevel = {
@@ -292,14 +284,15 @@ fun ChatInput(
                                 },
                                 onlyIcon = true,
                             )
+
                         }
+
                         ActionIconButton(
                             onClick = onMoreClick
                         ) {
                             Icon(
                                 imageVector = HugeIcons.Add01,
-                                contentDescription = stringResource(R.string.more_options),
-                                tint = if (isDark) Color.White else Color.Black
+                                contentDescription = stringResource(R.string.more_options)
                             )
                         }
 
@@ -361,17 +354,15 @@ private fun SendButton(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Fix tombol kirim tidak jelas - ChatGPT style: hitam/putih jelas, bukan abu pudar
-    val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
     val containerColor = when {
         loading -> MaterialTheme.colorScheme.errorContainer
-        empty -> if (isDark) androidx.compose.ui.graphics.Color(0xFF424242) else androidx.compose.ui.graphics.Color(0xFFE5E5E5)
-        else -> if (isDark) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
+        empty -> MaterialTheme.colorScheme.surfaceContainerHigh
+        else -> MaterialTheme.colorScheme.primary
     }
     val contentColor = when {
         loading -> MaterialTheme.colorScheme.onErrorContainer
-        empty -> if (isDark) androidx.compose.ui.graphics.Color(0xFF9E9E9E) else androidx.compose.ui.graphics.Color(0xFF6B6B6B)
-        else -> if (isDark) androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White
+        empty -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+        else -> MaterialTheme.colorScheme.onPrimary
     }
     Box(
         contentAlignment = Alignment.Center,
@@ -567,9 +558,9 @@ private fun TextInputRow(
                 .onFocusChanged {
                     isFocused = it.isFocused
                 },
-            shape = RoundedCornerShape(28.dp),
+            shape = MaterialTheme.shapes.largeIncreased,
             placeholder = {
-                Text(stringResource(R.string.chat_input_placeholder), color = if (MaterialTheme.colorScheme.background == Color(0xFF212121)) Color(0xFF9E9E9E) else Color(0xFF6B6B6B))
+                Text(stringResource(R.string.chat_input_placeholder))
             },
             lineLimits = TextFieldLineLimits.MultiLine(maxHeightInLines = 5),
             keyboardOptions = KeyboardOptions(

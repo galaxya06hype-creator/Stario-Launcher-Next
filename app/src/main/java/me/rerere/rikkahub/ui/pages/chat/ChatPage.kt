@@ -20,17 +20,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import dev.chrisbanes.haze.HazeInput
-import dev.chrisbanes.haze.blur.HazeBlurStyle
-import dev.chrisbanes.haze.blur.hazeBlur
-import dev.chrisbanes.haze.blur.material3.Material3
 import androidx.compose.material3.adaptive.currentWindowDpSize
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberDrawerState
@@ -317,7 +311,6 @@ private fun ChatPageContent(
                     bigScreen = bigScreen,
                     drawerState = drawerState,
                     previewMode = previewMode,
-                    hazeState = hazeState,
                     onNewChat = {
                         navigateToChatPage(navController)
                     },
@@ -597,7 +590,6 @@ private fun TopBar(
     drawerState: DrawerState,
     bigScreen: Boolean,
     previewMode: Boolean,
-    hazeState: dev.chrisbanes.haze.HazeState,
     onClickMenu: () -> Unit,
     onNewChat: () -> Unit,
     onUpdateTitle: (String) -> Unit
@@ -608,36 +600,10 @@ private fun TopBar(
         onUpdateTitle(it)
     }
 
-    // Liquid Glass backdrop untuk yang lingkaran atas - sinkron Enable Blur Effect, depth + border bersilau
-    val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
-    val useGlass = settings.displaySetting.enableBlurEffect
-    val glassColor = if (useGlass) {
-        if (isDark) androidx.compose.ui.graphics.Color(0x8C0A1419) else androidx.compose.ui.graphics.Color(0x8CE6F2FF) // 0.55 alpha biar backdrop kelihatan
-    } else Color.Transparent
-    val glassBorder = if (isDark) androidx.compose.ui.graphics.Color(0x33FFFFFF) else androidx.compose.ui.graphics.Color(0x4DFFFFFF)
-    val glassShape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
-    androidx.compose.material3.Surface(
-        modifier = Modifier.then(if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(20.dp) }) else Modifier),
-        shape = glassShape,
-        color = glassColor,
-        tonalElevation = if (useGlass) 12.dp else 0.dp,
-        shadowElevation = if (useGlass) 12.dp else 0.dp,
-        border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
-    ) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             if (!bigScreen) {
-                // Tombol 3 garis liquid glass highlight bersih
-                val btnGlass = if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(12.dp) }) else Modifier
-                Surface(
-                    modifier = Modifier.then(btnGlass),
-                    shape = RoundedCornerShape(12.dp),
-                    color = if (useGlass) glassColor else Color.Transparent,
-                    border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
-                    tonalElevation = if (useGlass) 8.dp else 0.dp,
-                    shadowElevation = if (useGlass) 8.dp else 0.dp,
-                ) {
                 IconButton(
                     onClick = {
                         scope.launch { drawerState.open() }
@@ -645,13 +611,10 @@ private fun TopBar(
                 ) {
                     Icon(HugeIcons.Menu03, "Messages")
                 }
-                }
             }
         },
         title = {
             val editTitleWarning = stringResource(R.string.chat_page_edit_title_warning)
-            // Title New Chat liquid glass bersih highlight
-            val titleGlass = if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(12.dp) }) else Modifier
             Surface(
                 onClick = {
                     if (conversation.messageNodes.isNotEmpty()) {
@@ -660,12 +623,7 @@ private fun TopBar(
                         toaster.show(editTitleWarning, type = ToastType.Warning)
                     }
                 },
-                modifier = Modifier.then(titleGlass),
-                shape = RoundedCornerShape(12.dp),
-                color = if (useGlass) glassColor else Color.Transparent,
-                border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
-                tonalElevation = if (useGlass) 6.dp else 0.dp,
-                shadowElevation = if (useGlass) 6.dp else 0.dp,
+                color = Color.Transparent,
             ) {
                 Column {
                     val assistant = settings.getCurrentAssistant()
@@ -692,16 +650,6 @@ private fun TopBar(
             }
         },
         actions = {
-            // 2 tombol kanan liquid glass highlight
-            val actionGlass = if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(12.dp) }) else Modifier
-            Surface(
-                modifier = Modifier.then(actionGlass),
-                shape = RoundedCornerShape(12.dp),
-                color = if (useGlass) glassColor else Color.Transparent,
-                border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
-                tonalElevation = if (useGlass) 8.dp else 0.dp,
-                shadowElevation = if (useGlass) 8.dp else 0.dp,
-            ) {
             IconButton(
                 onClick = {
                     onClickMenu()
@@ -709,22 +657,13 @@ private fun TopBar(
             ) {
                 Icon(if (previewMode) HugeIcons.Cancel01 else HugeIcons.LeftToRightListBullet, "Chat Options")
             }
-            }
-            Surface(
-                modifier = Modifier.then(actionGlass),
-                shape = RoundedCornerShape(12.dp),
-                color = if (useGlass) glassColor else Color.Transparent,
-                border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
-                tonalElevation = if (useGlass) 8.dp else 0.dp,
-                shadowElevation = if (useGlass) 8.dp else 0.dp,
-            ) {
+
             IconButton(
                 onClick = {
                     onNewChat()
                 }
             ) {
                 Icon(HugeIcons.MessageAdd01, "New Message")
-            }
             }
         },
     )
@@ -764,5 +703,4 @@ private fun TopBar(
             }
         )
     }
-    } // close Liquid Glass Surface backdrop
 }
