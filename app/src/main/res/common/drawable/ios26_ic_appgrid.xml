@@ -1,0 +1,15 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <!-- SF Symbol: square.grid.2x2.fill - iOS 26 app drawer, variable draw ready -->
+    <path android:fillColor="?attr/colorOnSurface" android:alpha="0.95"
+          android:pathData="M4,4 H10 V10 H4 Z"/>
+    <path android:fillColor="?attr/colorOnSurface" android:alpha="0.95"
+          android:pathData="M14,4 H20 V10 H14 Z"/>
+    <path android:fillColor="?attr/colorOnSurface" android:alpha="0.95"
+          android:pathData="M4,14 H10 V20 H4 Z"/>
+    <path android:fillColor="?attr/colorOnSurface" android:alpha="0.95"
+          android:pathData="M14,14 H20 V20 H14 Z"/>
+    <!-- Liquid Glass highlight -->
+    <path android:fillColor="#FFFFFF" android:alpha="0.15"
+          android:pathData="M4,4 H10 V6 H4 Z M14,4 H20 V6 H14 Z"/>
+</vector>

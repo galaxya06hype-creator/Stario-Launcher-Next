@@ -16,16 +16,22 @@
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>
   -->
 
+<!-- MOD iOS 26 Liquid Glass Drawer - Floating glass pager + dock -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/transparent">
 
+    <!-- iOS 26: FadingEdge remains but content now inside LiquidGlassView via helper at runtime -->
+    <!-- Untuk preview XML, pakai fallback ios26_bg_liquid_glass -->
     <com.stario.launcher.ui.common.FadingEdgeLayout
         android:id="@+id/fader"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_margin="8dp"
+        android:background="@drawable/ios26_bg_liquid_glass"
         app:edge="bottom|top"
         app:size_bottom="100dp"
         app:size_top="20dp">
@@ -37,15 +43,25 @@
 
     </com.stario.launcher.ui.common.FadingEdgeLayout>
 
+    <!-- iOS 26 Dock: floating pill, glassProminent, centered, with spring animation -->
     <RelativeLayout
         android:layout_width="500dp"
         android:layout_height="match_parent"
         android:layout_centerHorizontal="true"
         android:gravity="bottom"
         android:paddingStart="20dp"
-        android:paddingEnd="20dp">
+        android:paddingEnd="20dp"
+        android:paddingBottom="16dp">
 
-        <include layout="@layout/search_bar" />
+        <!-- Wrapper LiquidGlass untuk searchbar (akan di-wrap jadi com.qmdeve.liquidglass.LiquidGlassView di code) -->
+        <FrameLayout
+            android:id="@+id/ios26_search_wrapper"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/ios26_bg_liquid_glass_prominent"
+            android:elevation="8dp">
+            <include layout="@layout/search_bar" />
+        </FrameLayout>
 
     </RelativeLayout>
 
