@@ -628,6 +628,16 @@ private fun TopBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             if (!bigScreen) {
+                // Tombol 3 garis liquid glass highlight bersih
+                val btnGlass = if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(12.dp) }) else Modifier
+                Surface(
+                    modifier = Modifier.then(btnGlass),
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (useGlass) glassColor else Color.Transparent,
+                    border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
+                    tonalElevation = if (useGlass) 8.dp else 0.dp,
+                    shadowElevation = if (useGlass) 8.dp else 0.dp,
+                ) {
                 IconButton(
                     onClick = {
                         scope.launch { drawerState.open() }
@@ -635,10 +645,13 @@ private fun TopBar(
                 ) {
                     Icon(HugeIcons.Menu03, "Messages")
                 }
+                }
             }
         },
         title = {
             val editTitleWarning = stringResource(R.string.chat_page_edit_title_warning)
+            // Title New Chat liquid glass bersih highlight
+            val titleGlass = if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(12.dp) }) else Modifier
             Surface(
                 onClick = {
                     if (conversation.messageNodes.isNotEmpty()) {
@@ -647,7 +660,12 @@ private fun TopBar(
                         toaster.show(editTitleWarning, type = ToastType.Warning)
                     }
                 },
-                color = Color.Transparent,
+                modifier = Modifier.then(titleGlass),
+                shape = RoundedCornerShape(12.dp),
+                color = if (useGlass) glassColor else Color.Transparent,
+                border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
+                tonalElevation = if (useGlass) 6.dp else 0.dp,
+                shadowElevation = if (useGlass) 6.dp else 0.dp,
             ) {
                 Column {
                     val assistant = settings.getCurrentAssistant()
@@ -674,6 +692,16 @@ private fun TopBar(
             }
         },
         actions = {
+            // 2 tombol kanan liquid glass highlight
+            val actionGlass = if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(12.dp) }) else Modifier
+            Surface(
+                modifier = Modifier.then(actionGlass),
+                shape = RoundedCornerShape(12.dp),
+                color = if (useGlass) glassColor else Color.Transparent,
+                border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
+                tonalElevation = if (useGlass) 8.dp else 0.dp,
+                shadowElevation = if (useGlass) 8.dp else 0.dp,
+            ) {
             IconButton(
                 onClick = {
                     onClickMenu()
@@ -681,13 +709,22 @@ private fun TopBar(
             ) {
                 Icon(if (previewMode) HugeIcons.Cancel01 else HugeIcons.LeftToRightListBullet, "Chat Options")
             }
-
+            }
+            Surface(
+                modifier = Modifier.then(actionGlass),
+                shape = RoundedCornerShape(12.dp),
+                color = if (useGlass) glassColor else Color.Transparent,
+                border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
+                tonalElevation = if (useGlass) 8.dp else 0.dp,
+                shadowElevation = if (useGlass) 8.dp else 0.dp,
+            ) {
             IconButton(
                 onClick = {
                     onNewChat()
                 }
             ) {
                 Icon(HugeIcons.MessageAdd01, "New Message")
+            }
             }
         },
     )
