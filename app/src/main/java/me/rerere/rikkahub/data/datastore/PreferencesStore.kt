@@ -392,7 +392,9 @@ class SettingsStore(
                         // 过滤掉不存在的快捷消息 ID
                         quickMessageIds = assistant.quickMessageIds.filter { id ->
                             id in validQuickMessageIds
-                        }.toSet()
+                        }.toSet(),
+                        // auto-enable code_interpreter jika belum ada (tanpa hapus bawaan)
+                        localTools = if (assistant.localTools.any { it is LocalToolOption.CodeInterpreter }) assistant.localTools else assistant.localTools + LocalToolOption.CodeInterpreter
                     )
                 },
                 ttsProviders = settings.ttsProviders.distinctBy { it.id },
