@@ -600,10 +600,19 @@ private fun TopBar(
         onUpdateTitle(it)
     }
 
+    // Sempurnakan tata letak seperti ChatGPT.jpg - rapi, enak dipakai, jaman baru
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
             if (!bigScreen) {
+                // Pill kiri ChatGPT - dark #16181C border #2F3336
+                androidx.compose.material3.Surface(
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                    color = androidx.compose.ui.graphics.Color(0xFF16181C),
+                    tonalElevation = 0.dp,
+                    shadowElevation = 0.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0xFF2F3336)),
+                ) {
                 IconButton(
                     onClick = {
                         scope.launch { drawerState.open() }
@@ -611,11 +620,12 @@ private fun TopBar(
                 ) {
                     Icon(HugeIcons.Menu03, "Messages")
                 }
+                }
             }
         },
         title = {
             val editTitleWarning = stringResource(R.string.chat_page_edit_title_warning)
-            Surface(
+            androidx.compose.material3.Surface(
                 onClick = {
                     if (conversation.messageNodes.isNotEmpty()) {
                         titleState.open(conversation.title)
@@ -637,12 +647,12 @@ private fun TopBar(
                     )
                     if (model != null && provider != null) {
                         Text(
-                            text = "${assistant.name.ifBlank { stringResource(R.string.assistant_page_default_assistant) }} / ${model.displayName} (${provider.name})",
+                            text = "${model.displayName} · ${provider.name}",
                             overflow = TextOverflow.Ellipsis,
                             maxLines = 1,
                             color = LocalContentColor.current.copy(0.65f),
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 8.sp,
+                                fontSize = 10.sp,
                             )
                         )
                     }
@@ -650,6 +660,15 @@ private fun TopBar(
             }
         },
         actions = {
+            // Pill kanan ChatGPT - 2 icon dalam 1 pill dark, rapi jaman baru
+            androidx.compose.material3.Surface(
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp),
+                color = androidx.compose.ui.graphics.Color(0xFF16181C),
+                tonalElevation = 0.dp,
+                shadowElevation = 0.dp,
+                border = androidx.compose.foundation.BorderStroke(1.dp, androidx.compose.ui.graphics.Color(0xFF2F3336)),
+            ) {
+                androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             IconButton(
                 onClick = {
                     onClickMenu()
@@ -664,6 +683,8 @@ private fun TopBar(
                 }
             ) {
                 Icon(HugeIcons.MessageAdd01, "New Message")
+            }
+                }
             }
         },
     )
