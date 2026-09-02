@@ -15,12 +15,10 @@
   ~ You should have received a copy of the GNU General Public License
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>
   -->
-
+<!-- MOD iOS 26 Liquid Glass spring -->
 <scale xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="200"
-    android:fromXScale="0.99"
-    android:fromYScale="0.99"
-    android:pivotX="50%"
-    android:pivotY="50%"
-    android:toXScale="1.0"
-    android:toYScale="1.0" />
+    android:duration="350"
+    android:fromXScale="0.96" android:fromYScale="0.96"
+    android:pivotX="50%" android:pivotY="50%"
+    android:toXScale="1.0" android:toYScale="1.0"
+    android:interpolator="@android:interpolator/bounce" />

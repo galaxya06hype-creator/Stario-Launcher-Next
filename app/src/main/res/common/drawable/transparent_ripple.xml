@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- MOD iOS 26 Liquid Glass - translucent refraction -->
 <!--
   ~ Copyright (C) 2025 Răzvan Albu
   ~
@@ -17,7 +18,7 @@
   -->
 
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
-    android:color="?attr/colorSurfaceVariant">
+    android:color="#1AFFFFFF">
 
     <item>
         <color android:color="@android:color/transparent" />

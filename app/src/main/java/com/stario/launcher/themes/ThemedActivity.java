@@ -348,15 +348,24 @@ abstract public class ThemedActivity extends AppCompatActivity {
         }
     }
 
+    // MOD iOS 26 Liquid Glass: window background jadi translucent agar wallpaper keliatan + refraction
     private void assignActualBackgroundColor(@NonNull Window window) {
         roundedCornerBackground.setCornerRadius(Measurements.dpToPx(0));
-        windowBackground = new ColorDrawable(backgroundColor);
+        // iOS 26: jangan opaque penuh, pakai translucent 40 white + window wallpaper
+        int glassColor = android.graphics.Color.argb(40, 255,255,255);
+        if ((backgroundColor & 0xFF000000) != 0 && (backgroundColor >> 16 & 0xFF) < 50) {
+            // dark mode -> lebih gelap translucent 35 black
+            glassColor = android.graphics.Color.argb(35, 20,20,20);
+        }
+        windowBackground = new ColorDrawable(glassColor);
 
         // If the window background, when set, is completely opaque (alpha 255),
         // The window will treat every alpha value for the wallpaper as black
         windowBackground.setAlpha(0);
         window.setBackgroundDrawable(windowBackground);
         windowBackground.setAlpha(255);
+        // Pastikan FLAG_SHOW_WALLPAPER biar liquid glass lihat wallpaper (iOS26 effect)
+        window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WALLPAPER);
     }
 
     @Override

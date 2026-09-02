@@ -15,20 +15,10 @@
   ~ You should have received a copy of the GNU General Public License
   ~ along with this program. If not, see <http://www.gnu.org/licenses/>
   -->
-
+<!-- MOD iOS 26 Liquid Glass spring -->
 <set xmlns:android="http://schemas.android.com/apk/res/android"
-    android:duration="300"
-    android:interpolator="@android:interpolator/fast_out_slow_in">
-
-    <alpha
-        android:fromAlpha="0"
-        android:toAlpha="1" />
-
-    <scale
-        android:fromXScale="80%"
-        android:fromYScale="80%"
-        android:pivotX="20%"
-        android:pivotY="50%"
-        android:toXScale="100%"
-        android:toYScale="100%" />
+    android:duration="500"
+    android:interpolator="@android:interpolator/overshoot">
+    <alpha android:fromAlpha="0" android:toAlpha="1" />
+    <scale android:fromXScale="80%" android:fromYScale="80%" android:pivotX="20%" android:pivotY="50%" android:toXScale="100%" android:toYScale="100%" />
 </set>

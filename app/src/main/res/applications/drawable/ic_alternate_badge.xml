@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MOD iOS 26 Liquid Glass - translucent refraction --><!--
   ~ Copyright (C) 2025 Răzvan Albu
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -35,7 +36,7 @@
         android:right="2dp"
         android:top="2dp">
         <shape android:shape="oval">
-            <solid android:color="?attr/colorSecondaryContainer" />
+            <solid android:color="#40FFFFFF" />
         </shape>
     </item>
     <item

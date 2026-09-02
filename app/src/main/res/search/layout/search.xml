@@ -221,7 +221,7 @@
                     android:layout_height="4dp"
                     android:layout_marginLeft="1dp"
                     android:layout_marginRight="1dp"
-                    android:background="?attr/colorSurfaceContainer"
+                    android:background="@drawable/ios26_bg_liquid_glass"
                     android:translationY="2dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"

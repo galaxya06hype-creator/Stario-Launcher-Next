@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?><!--
+<?xml version="1.0"?>
+<!-- MOD iOS 26 Liquid Glass all --> encoding="utf-8"?><!--
   ~ Copyright (C) 2025 Răzvan Albu
   ~
   ~ This program is free software: you can redistribute it and/or modify
@@ -50,7 +51,7 @@
                 app:stl_dividerThickness="0dp"
                 app:stl_drawDecorationAfterTab="false"
                 app:stl_indicatorAlwaysInCenter="true"
-                app:stl_indicatorColor="?attr/colorPrimaryContainer"
+                app:stl_indicatorColor="#33FFFFFF"
                 app:stl_indicatorCornerRadius="24dp"
                 app:stl_indicatorGravity="center"
                 app:stl_indicatorInFront="false"

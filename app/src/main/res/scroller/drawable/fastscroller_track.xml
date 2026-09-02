@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0"?>
+<!-- MOD iOS 26 Liquid Glass all --> encoding="utf-8"?>
 <!--
   ~ Copyright (C) 2025 Răzvan Albu
   ~
@@ -25,5 +26,5 @@
         android:topLeftRadius="50dp"
         android:topRightRadius="50dp" />
 
-    <solid android:color="?attr/colorPrimaryFixed" />
+    <solid android:color="#4DFFFFFF" <!-- iOS26 --> />
 </shape>
