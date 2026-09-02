@@ -107,7 +107,7 @@ jobs:
           # also for debug variant check
           ls -lh app/google-services.json
 
-      - name: Prepare signing (only if secrets provided, else debug)
+      - name: Prepare signing (release only, keep fitur bawaan)
         run: |
           if [ -n "${{ secrets.KEY_BASE64 }}" ] && [ -n "${{ secrets.SIGNING_CONFIG }}" ]; then
             echo "Signing secrets found, preparing release keystore"
@@ -115,43 +115,53 @@ jobs:
             echo "${{ secrets.SIGNING_CONFIG }}" > local.properties
             cat local.properties
           else
-            echo "No signing secrets, will build debug only (no force-close)"
-            # ensure no stale signing config breaks debug
-            if [ -f local.properties ]; then
-              grep -v "storeFile\|storePassword\|keyAlias\|keyPassword" local.properties > local.properties.tmp || true
-              mv local.properties.tmp local.properties || true
-            fi
-            touch local.properties
-            cat local.properties || true
+            echo "No secrets - generate dummy keystore for release (fitur bawaan tetap, tidak force-close)"
+            # generate dummy keystore for CI release - tidak merusak fitur, hanya untuk build 1 APK release
+            keytool -genkey -v -keystore app/app.key -storepass 123456 -alias ci -keypass 123456 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=CI, OU=CI, O=CI, L=CI, S=CI, C=US" 2>&1 | tail
+            cat > local.properties << 'EOF'
+          storeFile=app/app.key
+          storePassword=123456
+          keyAlias=ci
+          keyPassword=123456
+          EOF
+            cat local.properties
+            echo "dummy keystore ready $(ls -lh app/app.key)"
           fi
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
-      - name: Build Debug APK (no sign, no crash)
-        run: ./gradlew assembleDebug --stacktrace --info
-        # debug keeps all features, no proguard risk, no Firebase crash
+      - name: Build Release APK only (1 APK 1 ZIP, tidak bengkak)
+        run: |
+          ./gradlew assembleRelease --stacktrace
+          echo "=== APKs built (release only) ==="
+          ls -lh app/build/outputs/apk/release/ || true
+          # keep only universal APK to avoid 200MB bloat (splits abi)
+          # RikkaHub splits arm64-v8a + x86_64 + universal = 3 APKs, we keep universal only = 1 APK
+          if ls app/build/outputs/apk/release/*universal*.apk 1>/dev/null 2>&1; then
+            echo "Keeping universal APK only"
+            ls app/build/outputs/apk/release/*universal*.apk
+            mkdir -p /tmp/single-apk
+            cp app/build/outputs/apk/release/*universal*.apk /tmp/single-apk/rikkahub-release.apk
+            rm app/build/outputs/apk/release/*.apk
+            mv /tmp/single-apk/rikkahub-release.apk app/build/outputs/apk/release/
+          elif ls app/build/outputs/apk/release/*.apk 1>/dev/null 2>&1; then
+            echo "No universal, keep first APK only"
+            ls -lh app/build/outputs/apk/release/*.apk
+            mkdir -p /tmp/single-apk
+            FIRST=$(ls app/build/outputs/apk/release/*.apk | head -n1)
+            cp "$FIRST" /tmp/single-apk/rikkahub-release.apk
+            rm app/build/outputs/apk/release/*.apk
+            mv /tmp/single-apk/rikkahub-release.apk app/build/outputs/apk/release/
+          fi
+          ls -lh app/build/outputs/apk/release/
+          echo "APK size: $(du -h app/build/outputs/apk/release/*.apk | cut -f1)"
 
-      - name: Upload Debug APK
+      - name: Upload Release APK (1 ZIP 1 APK)
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: rikkahub-chatgpt-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          retention-days: 14
-
-      - name: Build Release APK (only if signing ready)
-        if: ${{ env.HAS_SIGNING == 'true' }}
-        env:
-          HAS_SIGNING: ${{ secrets.KEY_BASE64 != '' && secrets.SIGNING_CONFIG != '' }}
-        run: ./gradlew assembleRelease --stacktrace
-        continue-on-error: true
-
-      - name: Upload Release APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rikkahub-chatgpt-release-apk
+          name: rikkahub-release
           path: app/build/outputs/apk/release/*.apk
           retention-days: 14
-        continue-on-error: true
+          compression-level: 9
