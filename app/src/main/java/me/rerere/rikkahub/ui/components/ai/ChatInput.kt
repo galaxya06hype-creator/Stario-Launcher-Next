@@ -133,8 +133,8 @@ fun ChatInput(
 ) {
     val toaster = LocalToaster.current
     val assistant = settings.getCurrentAssistant()
-    // ChatGPT pill colors - 100% clone light #FFFFFF / dark #2F2F2F
-    val isDark = MaterialTheme.colorScheme.background == androidx.compose.ui.graphics.Color(0xFF212121) || MaterialTheme.colorScheme.surface == androidx.compose.ui.graphics.Color(0xFF212121)
+    // Fix isDark pakai LocalDarkMode - anti artefak, fitur bawaan tetap
+    val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
     val chatGptPillColor = if (isDark) androidx.compose.ui.graphics.Color(0xFF2F2F2F) else androidx.compose.ui.graphics.Color(0xFFFFFFFF)
     val chatGptBorderColor = if (isDark) androidx.compose.ui.graphics.Color(0xFF424242) else androidx.compose.ui.graphics.Color(0xFFE5E5E5)
     val hazeTintColor = chatGptPillColor
@@ -245,7 +245,47 @@ fun ChatInput(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        // ChatGPT style: + left only, model/search/reasoning pindah ke sheet +
+                        // Restore fitur bawaan: Model + Search + Reasoning tetap di bar (tidak hilang)
+                        Row(
+                            modifier = Modifier
+                                .weight(1f)
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            ModelSelectorButton(
+                                state = modelListState,
+                                onlyIcon = true,
+                                modifier = Modifier,
+                            )
+                            val enableSearchMsg = stringResource(R.string.web_search_enabled)
+                            val disableSearchMsg = stringResource(R.string.web_search_disabled)
+                            val chatModel = settings.getCurrentChatModel()
+                            SearchPickerButton(
+                                enableSearch = enableSearch,
+                                settings = settings,
+                                onUpdateSearchMode = { mode ->
+                                    onUpdateSearchMode(mode)
+                                    val enabled = mode != SearchMode.OFF
+                                    toaster.show(
+                                        message = if (enabled) enableSearchMsg else disableSearchMsg,
+                                        duration = 1.seconds,
+                                        type = if (enabled) ToastType.Success else ToastType.Normal
+                                    )
+                                },
+                                onUpdateSearchService = onUpdateSearchService,
+                                model = chatModel,
+                            )
+                            val model = settings.getCurrentChatModel()
+                            if (model?.abilities?.contains(ModelAbility.REASONING) == true) {
+                                ReasoningButton(
+                                    reasoningLevel = assistant.reasoningLevel,
+                                    onUpdateReasoningLevel = {
+                                        onUpdateAssistant(assistant.copy(reasoningLevel = it))
+                                    },
+                                    onlyIcon = true,
+                                )
+                            }
+                        }
                         ActionIconButton(
                             onClick = onMoreClick
                         ) {
@@ -314,15 +354,17 @@ private fun SendButton(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Fix tombol kirim tidak jelas - ChatGPT style: hitam/putih jelas, bukan abu pudar
+    val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
     val containerColor = when {
         loading -> MaterialTheme.colorScheme.errorContainer
-        empty -> MaterialTheme.colorScheme.surfaceContainerHigh
-        else -> MaterialTheme.colorScheme.primary
+        empty -> if (isDark) androidx.compose.ui.graphics.Color(0xFF424242) else androidx.compose.ui.graphics.Color(0xFFE5E5E5)
+        else -> if (isDark) androidx.compose.ui.graphics.Color.White else androidx.compose.ui.graphics.Color.Black
     }
     val contentColor = when {
         loading -> MaterialTheme.colorScheme.onErrorContainer
-        empty -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-        else -> MaterialTheme.colorScheme.onPrimary
+        empty -> if (isDark) androidx.compose.ui.graphics.Color(0xFF9E9E9E) else androidx.compose.ui.graphics.Color(0xFF6B6B6B)
+        else -> if (isDark) androidx.compose.ui.graphics.Color.Black else androidx.compose.ui.graphics.Color.White
     }
     Box(
         contentAlignment = Alignment.Center,
