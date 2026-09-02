@@ -116,16 +116,20 @@ jobs:
             cat local.properties
           else
             echo "No secrets - generate dummy keystore for release (fitur bawaan tetap, tidak force-close)"
-            # generate dummy keystore for CI release - tidak merusak fitur, hanya untuk build 1 APK release
+            # generate dummy keystore for CI release - fix double app/app path bug
             keytool -genkey -v -keystore app/app.key -storepass 123456 -alias ci -keypass 123456 -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=CI, OU=CI, O=CI, L=CI, S=CI, C=US" 2>&1 | tail
+            mkdir -p app/app
+            cp app/app.key app/app/app.key 2>/dev/null || true
+            cp app/app.key app.key 2>/dev/null || true
+            # storeFile relative to app module = app.key (not app/app.key) agar tidak jadi app/app/app.key
             cat > local.properties << 'EOF'
-          storeFile=app/app.key
+          storeFile=app.key
           storePassword=123456
           keyAlias=ci
           keyPassword=123456
           EOF
             cat local.properties
-            echo "dummy keystore ready $(ls -lh app/app.key)"
+            echo "dummy keystore ready $(ls -lh app/app.key) $(ls -lh app/app/app.key 2>&1 | head)"
           fi
 
       - name: Make gradlew executable
