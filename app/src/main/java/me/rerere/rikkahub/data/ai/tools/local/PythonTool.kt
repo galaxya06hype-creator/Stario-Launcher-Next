@@ -41,18 +41,10 @@ internal fun buildPythonTool(): Tool = Tool(
             val workspaceManager: WorkspaceManager? = koin?.getOrNull()
             // fallback: coba host python3 jika workspace tidak ready
             val result = if (workspaceManager != null) {
-                // ambil workspace root pertama yang ada, atau buat temp
-                val baseDir = workspaceManager.let { 
-                    // cari root yang punya rootfs, fallback ke default
-                    try {
-                        val roots = java.io.File(workspaceManager.javaClass.getDeclaredField("baseDir").let { f -> f.isAccessible = true; f.get(workspaceManager) } as java.io.File).listFiles()?.map { it.name } ?: emptyList()
-                        roots.firstOrNull() ?: "default"
-                    } catch (_: Exception) { "default" }
-                }
+                val baseDir = "default"
                 try {
                     workspaceManager.ensureWorkspace(baseDir)
                 } catch (_: Exception) {}
-                // tulis code ke file di workspace files
                 try {
                     workspaceManager.writeText(baseDir, "tmp_code.py", code, overwrite = true)
                 } catch (_: Exception) {}
