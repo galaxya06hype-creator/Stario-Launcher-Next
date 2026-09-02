@@ -235,22 +235,43 @@ internal fun ModelSelectorButton(
             }
         }
     } else {
-        IconButton(
-            onClick = {
-                state.open()
-            },
+        // Pill G Google warna + tombol kecil ⌄ seperti Grok PopUp - icon bawaan tetap AutoAIIcon tapi bungkus pill
+        androidx.compose.material3.Surface(
+            onClick = { state.open() },
+            shape = RoundedCornerShape(20.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            tonalElevation = 0.dp,
         ) {
-            if (model != null) {
-                AutoAIIcon(
-                    modifier = Modifier.size(36.dp),
-                    name = model.modelId,
-                    color = Color.Transparent
-                )
-            } else {
+            androidx.compose.foundation.layout.Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                if (model != null) {
+                    AutoAIIcon(
+                        modifier = Modifier.size(18.dp),
+                        name = model.modelId,
+                        color = Color.Transparent
+                    )
+                    Text(
+                        text = model.displayName.take(12),
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1
+                    )
+                } else {
+                    // G Google warna bawaan
+                    me.rerere.rikkahub.ui.components.ui.GoogleGIconGradient(modifier = Modifier.size(18.dp))
+                    Text(
+                        text = stringResource(R.string.model_list_select_model),
+                        style = MaterialTheme.typography.labelMedium,
+                        maxLines = 1
+                    )
+                }
                 Icon(
-                    imageVector = HugeIcons.Brain02,
-                    contentDescription = stringResource(R.string.setting_model_page_chat_model),
-                    modifier = Modifier.size(20.dp)
+                    imageVector = HugeIcons.ArrowRight01,
+                    contentDescription = null,
+                    modifier = Modifier.size(12.dp).scale(0.8f),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
