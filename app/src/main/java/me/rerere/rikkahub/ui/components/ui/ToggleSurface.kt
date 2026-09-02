@@ -20,9 +20,11 @@ fun ToggleSurface(
 ) {
     val contentColor =
         if (checked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+    val containerColor =
+        if (checked) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
     Surface(
         onClick = onClick,
-        color = Color.Transparent,
+        color = containerColor,
         contentColor = contentColor,
         modifier = modifier,
         shape = shape,

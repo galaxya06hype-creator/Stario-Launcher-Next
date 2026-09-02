@@ -249,20 +249,19 @@ internal fun ModelSelectorButton(
             ) {
                 if (model != null) {
                     AutoAIIcon(
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(22.dp),
                         name = model.modelId,
                         color = Color.Transparent
                     )
                     Text(
-                        text = model.displayName.take(12),
+                        text = model.displayName.take(8),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1
                     )
                 } else {
-                    // G Google warna bawaan
-                    me.rerere.rikkahub.ui.components.ui.GoogleGIconGradient(modifier = Modifier.size(18.dp))
+                    me.rerere.rikkahub.ui.components.ui.GoogleGIconGradient(modifier = Modifier.size(22.dp))
                     Text(
-                        text = stringResource(R.string.model_list_select_model),
+                        text = stringResource(R.string.model_list_select_model).take(8),
                         style = MaterialTheme.typography.labelMedium,
                         maxLines = 1
                     )
