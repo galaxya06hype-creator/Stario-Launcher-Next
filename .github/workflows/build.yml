@@ -1,0 +1,156 @@
+name: Android Build (ChatGPT Edition)
+
+on:
+  push:
+    branches: [ main, master, chatgpt-ui ]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web-ui/pnpm-lock.yaml
+
+      - name: Install web-ui deps
+        working-directory: web-ui
+        run: pnpm install --frozen-lockfile
+        continue-on-error: false
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Prepare google-services.json (safe dummy)
+        run: |
+          if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
+            echo "Using secret GOOGLE_SERVICES_JSON"
+            echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
+          elif [ -f "app/google-services.json" ]; then
+            echo "google-services.json already exists, keep it"
+          else
+            echo "Creating dummy google-services.json for CI (won't crash, Firebase disabled)"
+            cat > app/google-services.json << 'EOF'
+          {
+            "project_info": {
+              "project_number": "0",
+              "project_id": "dummy-rikkahub",
+              "storage_bucket": "dummy.appspot.com"
+            },
+            "client": [
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:0:android:dummy",
+                  "android_client_info": {
+                    "package_name": "me.rerere.rikkahub"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [{ "current_key": "dummy" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              },
+              {
+                "client_info": {
+                  "mobilesdk_app_id": "1:0:android:dummy2",
+                  "android_client_info": {
+                    "package_name": "me.rerere.rikkahub.debug"
+                  }
+                },
+                "oauth_client": [],
+                "api_key": [{ "current_key": "dummy" }],
+                "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+              }
+            ],
+            "configuration_version": "1"
+          }
+          EOF
+            cat app/google-services.json
+          fi
+          # also for debug variant check
+          ls -lh app/google-services.json
+
+      - name: Prepare signing (only if secrets provided, else debug)
+        run: |
+          if [ -n "${{ secrets.KEY_BASE64 }}" ] && [ -n "${{ secrets.SIGNING_CONFIG }}" ]; then
+            echo "Signing secrets found, preparing release keystore"
+            echo "${{ secrets.KEY_BASE64 }}" | base64 -d > app/app.key
+            echo "${{ secrets.SIGNING_CONFIG }}" > local.properties
+            cat local.properties
+          else
+            echo "No signing secrets, will build debug only (no force-close)"
+            # ensure no stale signing config breaks debug
+            if [ -f local.properties ]; then
+              grep -v "storeFile\|storePassword\|keyAlias\|keyPassword" local.properties > local.properties.tmp || true
+              mv local.properties.tmp local.properties || true
+            fi
+            touch local.properties
+            cat local.properties || true
+          fi
+
+      - name: Make gradlew executable
+        run: chmod +x ./gradlew
+
+      - name: Build Debug APK (no sign, no crash)
+        run: ./gradlew assembleDebug --stacktrace --info
+        # debug keeps all features, no proguard risk, no Firebase crash
+
+      - name: Upload Debug APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rikkahub-chatgpt-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
+
+      - name: Build Release APK (only if signing ready)
+        if: ${{ env.HAS_SIGNING == 'true' }}
+        env:
+          HAS_SIGNING: ${{ secrets.KEY_BASE64 != '' && secrets.SIGNING_CONFIG != '' }}
+        run: ./gradlew assembleRelease --stacktrace
+        continue-on-error: true
+
+      - name: Upload Release APK
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rikkahub-chatgpt-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          retention-days: 14
+        continue-on-error: true
