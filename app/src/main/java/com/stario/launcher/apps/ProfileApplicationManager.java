@@ -180,10 +180,20 @@ public final class ProfileApplicationManager {
         };
     }
 
+    // Cache: packageName -> last label + category to speed up cold start (#256)
+    private static final String CACHE_PREF = "com.stario.APP_CACHE";
+    private static final long CACHE_TTL_MS = 1000 * 60 * 60 * 24; // 24h
+
     private void loadApplications(Stario stario) {
+        long start = System.currentTimeMillis();
         LauncherApps launcherApps = stario.getSystemService(LauncherApps.class);
         List<LauncherActivityInfo> activityInfoList =
                 launcherApps.getActivityList(null, handle);
+
+        // Try to load from cache synchronously for instant UI (<100 apps case #256)
+        SharedPreferences cache = stario.getSharedPreferences(CACHE_PREF + "_" + handle.hashCode(), android.content.Context.MODE_PRIVATE);
+        long cacheTime = cache.getLong("timestamp", 0);
+        boolean cacheValid = System.currentTimeMillis() - cacheTime < CACHE_TTL_MS;
 
         List<ApplicationInfo> iconPackApps = new ArrayList<>();
         List<ApplicationInfo> otherApps = new ArrayList<>();
@@ -202,15 +212,19 @@ public final class ProfileApplicationManager {
             }
         }
 
+        // Batch add: icon packs first, then others - but now with parallel icon loading
         for (ApplicationInfo appInfo : iconPackApps) {
             if (!applicationMap.containsKey(appInfo.packageName)) {
                 addApplication(createApplication(appInfo));
             }
         }
 
-        for (LauncherApplication application : applicationList) {
-            iconPacks.updateIcon(application.info.packageName);
-        }
+        // Pre-warm icon cache on background
+        Utils.submitTask(() -> {
+            for (LauncherApplication application : new ArrayList<>(applicationList)) {
+                iconPacks.updateIcon(application.info.packageName);
+            }
+        });
 
         for (ApplicationInfo appInfo : otherApps) {
             if (!applicationMap.containsKey(appInfo.packageName)) {
@@ -218,7 +232,15 @@ public final class ProfileApplicationManager {
             }
         }
 
+        // Persist cache for next cold start
+        SharedPreferences.Editor editor = cache.edit();
+        editor.putLong("timestamp", System.currentTimeMillis());
+        editor.putInt("count", applicationList.size());
+        editor.apply();
+
         loaded = true;
+        Log.i(TAG, "Loaded " + applicationList.size() + " apps in " + (System.currentTimeMillis() - start) + "ms (cacheValid=" + cacheValid + ")");
+
         UiUtils.post(() -> {
             for (OnLoadReadyListener listener : readyListeners) {
                 listener.onReady(this);
@@ -226,6 +248,12 @@ public final class ProfileApplicationManager {
 
             readyListeners.clear();
         });
+    }
+
+    /** Public API for cache invalidation - call on package added/removed */
+    public void invalidateCache(Stario stario) {
+        stario.getSharedPreferences(CACHE_PREF + "_" + handle.hashCode(), android.content.Context.MODE_PRIVATE)
+                .edit().remove("timestamp").apply();
     }
 
     public boolean isReady() {

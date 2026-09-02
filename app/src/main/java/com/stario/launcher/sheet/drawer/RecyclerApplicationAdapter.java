@@ -384,6 +384,53 @@ public abstract class RecyclerApplicationAdapter
         }
     }
 
+    // Notification dot cache - populated via NotificationService broadcast
+    private static final java.util.Map<String, Integer> notificationCounts = new java.util.concurrent.ConcurrentHashMap<>();
+    private static boolean notificationReceiverRegistered = false;
+
+    public static void updateNotificationCount(String packageName, int count) {
+        if (count > 0) notificationCounts.put(packageName, count);
+        else notificationCounts.remove(packageName);
+    }
+
+    public static void setNotificationMap(java.util.Map<String, Integer> map) {
+        notificationCounts.clear();
+        if (map != null) notificationCounts.putAll(map);
+    }
+
+    private void ensureNotificationReceiver() {
+        if (notificationReceiverRegistered) return;
+        try {
+            android.content.BroadcastReceiver receiver = new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(android.content.Context context, android.content.Intent intent) {
+                    if (intent == null) return;
+                    String action = intent.getAction();
+                    if (com.stario.launcher.services.NotificationService.UPDATE_NOTIFICATIONS.equals(action)) {
+                        String pkg = intent.getStringExtra(com.stario.launcher.services.NotificationService.TARGET_NOTIFICATION);
+                        int count = intent.getIntExtra(com.stario.launcher.services.NotificationService.NOTIFICATION_COUNT, 0);
+                        updateNotificationCount(pkg, count);
+                        notifyDataSetChanged();
+                    } else if (com.stario.launcher.services.NotificationService.NOTIFICATIONS_EVENT.equals(action)) {
+                        Object map = intent.getSerializableExtra(com.stario.launcher.services.NotificationService.TARGET_NOTIFICATION);
+                        if (map instanceof java.util.HashMap) {
+                            //noinspection unchecked
+                            setNotificationMap((java.util.HashMap<String, Integer>) map);
+                            notifyDataSetChanged();
+                        }
+                    }
+                }
+            };
+            android.content.IntentFilter filter = new android.content.IntentFilter();
+            filter.addAction(com.stario.launcher.services.NotificationService.UPDATE_NOTIFICATIONS);
+            filter.addAction(com.stario.launcher.services.NotificationService.NOTIFICATIONS_EVENT);
+            androidx.core.content.ContextCompat.registerReceiver(activity, receiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED);
+            notificationReceiverRegistered = true;
+        } catch (Exception e) {
+            android.util.Log.e(TAG, "Failed to register notification receiver", e);
+        }
+    }
+
     @Override
     public void onBind(@NonNull ApplicationViewHolder viewHolder, int index) {
         LauncherApplication application = getApplication(index);
@@ -391,9 +438,27 @@ public abstract class RecyclerApplicationAdapter
         if (application != LauncherApplication.FALLBACK_APP) {
             viewHolder.setLabel(application.getLabel());
 
-            // TODO: notification dots
+            ensureNotificationReceiver();
             if (viewHolder.notification != null) {
-                viewHolder.notification.setVisibility(View.GONE);
+                Integer count = notificationCounts.get(application.getInfo().packageName);
+                boolean showDot = count != null && count > 0;
+                // Respect user preference for dots vs numeric badge
+                android.content.SharedPreferences prefs = activity.getSharedPreferences(com.stario.launcher.preferences.Entry.SEARCH.toString(), android.content.Context.MODE_PRIVATE);
+                // Use separate pref; fallback to STARIO
+                android.content.SharedPreferences starioPrefs = activity.getSharedPreferences(com.stario.launcher.preferences.Entry.STARIO.toString(), android.content.Context.MODE_PRIVATE);
+                boolean dotsEnabled = starioPrefs.getBoolean("com.stario.NOTIFICATION_DOTS", true);
+                if (showDot && dotsEnabled) {
+                    viewHolder.notification.setVisibility(View.VISIBLE);
+                    // If notification view is TextView, show count
+                    if (viewHolder.notification instanceof TextView && count > 1) {
+                        ((TextView) viewHolder.notification).setText(String.valueOf(Math.min(count, 99)));
+                    }
+                    // Add content description for accessibility
+                    viewHolder.itemView.setContentDescription(application.getLabel() + ", " + count + " notifications");
+                } else {
+                    viewHolder.notification.setVisibility(View.GONE);
+                    viewHolder.itemView.setContentDescription(application.getLabel());
+                }
             }
 
             viewHolder.icon.setApplication(application);

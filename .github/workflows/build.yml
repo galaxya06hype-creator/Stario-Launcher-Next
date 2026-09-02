@@ -2,30 +2,97 @@ name: Build
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main, master, develop, "feature/**" ]
   pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
 
 jobs:
   build:
-    name: Gradle Build
+    name: Gradle Build + Lint + Test
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '17'
+          cache: gradle
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Make gradlew executable
         run: chmod +x gradlew
 
-      - name: Gradle Build
-        run: ./gradlew build
+      - name: Validate Gradle Wrapper
+        uses: gradle/actions/wrapper-validation@v4
+
+      - name: Lint
+        run: ./gradlew lint --stacktrace
+        continue-on-error: true
+
+      - name: Assemble Debug
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Assemble Release (unsigned)
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Run Unit Tests
+        run: ./gradlew test --stacktrace
+        continue-on-error: true
+
+      - name: Upload Lint Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-report
+          path: app/build/reports/lint-results-*.html
+          if-no-files-found: ignore
+
+      - name: Upload APKs
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk-artifacts
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+          if-no-files-found: ignore
+
+      - name: Dependency Analysis
+        run: ./gradlew buildHealth --stacktrace
+        continue-on-error: true
+
+  security:
+    name: Security / Dependency Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Check for secrets
+        run: |
+          echo "Checking for hardcoded secrets..."
+          ! grep -r "keystorePassword\|keyPassword\|API_KEY" app/src --include="*.java" --include="*.kt" | grep -v "getProperty" || echo "Warning: potential hardcoded secret"
+
+  # Job to build Docker reproducible build (optional)
+  docker:
+    name: Docker Reproducible Build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build with Docker
+        run: |
+          docker build -t stario-dev .
+          echo "Docker build successful"

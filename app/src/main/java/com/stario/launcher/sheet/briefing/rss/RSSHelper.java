@@ -59,4 +59,65 @@ public class RSSHelper {
 
         return null;
     }
+
+    // === MOD: Sorting support for #261 ===
+    public enum SortOrder { NEWEST_FIRST, OLDEST_FIRST }
+    public static List<RssItem> parseSorted(String url, SortOrder order) {
+        List<RssItem> items = parse(url);
+        if (items == null) return null;
+        if (order == SortOrder.OLDEST_FIRST) {
+            java.util.Collections.reverse(items);
+            // also sort by pubDate if available
+            try {
+                items.sort((a,b) -> {
+                    if (a.getPubDate() == null || b.getPubDate() == null) return 0;
+                    return a.getPubDate().compareTo(b.getPubDate());
+                });
+            } catch (Exception ignored) {}
+        } else {
+            try {
+                items.sort((a,b) -> {
+                    if (a.getPubDate() == null || b.getPubDate() == null) return 0;
+                    return b.getPubDate().compareTo(a.getPubDate());
+                });
+            } catch (Exception ignored) {}
+        }
+        return items;
+    }
+
+    // === MOD: Import/Export for #260 OPML ===
+    public static String exportToOpml(java.util.List<com.stario.launcher.sheet.briefing.dialog.page.feed.Feed> feeds) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?><opml version=\"2.0\"><head><title>Stario Feeds</title></head><body>");
+        for (com.stario.launcher.sheet.briefing.dialog.page.feed.Feed f : feeds) {
+            sb.append("<outline type=\"rss\" text=\"").append(escapeXml(f.getTitle()))
+              .append("\" xmlUrl=\"").append(escapeXml(f.getUrl())).append("\"/>");
+        }
+        sb.append("</body></opml>");
+        return sb.toString();
+    }
+
+    public static java.util.List<String> importFromOpml(String opml) {
+        java.util.List<String> urls = new java.util.ArrayList<>();
+        try {
+            org.jsoup.nodes.Document doc = org.jsoup.Jsoup.parse(opml, "", org.jsoup.parser.Parser.xmlParser());
+            for (org.jsoup.nodes.Element el : doc.select("outline[xmlUrl]")) {
+                String url = el.attr("xmlUrl");
+                if (!url.isEmpty()) urls.add(url);
+            }
+            // fallback regex
+            if (urls.isEmpty()) {
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("xmlUrl=\"([^\"]+)\"").matcher(opml);
+                while (m.find()) urls.add(m.group(1));
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "import OPML failed", e);
+        }
+        return urls;
+    }
+
+    private static String escapeXml(String s) {
+        if (s == null) return "";
+        return s.replace("&","&amp;").replace("\"","&quot;").replace("<","&lt;").replace(">","&gt;");
+    }
 }

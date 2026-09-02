@@ -37,7 +37,11 @@ public enum Entry {
     SHEET("SHEET"),
     THEME("THEME"),
     ICONS("ICONS"),
-    CLOCK("CLOCK");
+    CLOCK("CLOCK"),
+    // MOD: new preferences for heavy mod
+    CUSTOM_SEARCH("CUSTOM_SEARCH"),
+    NOTIFICATIONS("NOTIFICATIONS"),
+    APPEARANCE("APPEARANCE");
 
     private final String serialized;
 

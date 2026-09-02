@@ -254,8 +254,17 @@ public class SearchFragment extends Fragment {
         search.setFocusable(true);
         search.setFocusableInTouchMode(true);
         search.setShowSoftInputOnFocus(true);
-        search.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS |
-                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+        // FIX #294, #209: Non-English input (Gboard Chinese Zhuyin etc) was broken by VISIBLE_PASSWORD
+        // VISIBLE_PASSWORD disables composing & IME personalization. Switch to normal text with NO_SUGGESTIONS
+        // but keep variationNormal and explicitly allow IME to do composing.
+        search.setInputType(InputType.TYPE_CLASS_TEXT |
+                InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+        // Allow private IME options to keep composing spans; do not force password variation
+        search.setPrivateImeOptions("nm"); // no microphone? keep default
+        // Ensure we support all languages: set IME hint
+        if (Utils.isMinimumSDK(Build.VERSION_CODES.O)) {
+            search.setImportantForAutofill(View.IMPORTANT_FOR_AUTOFILL_NO);
+        }
 
         Measurements.addStatusBarListener(value -> {
             scrollView.setPadding(scrollView.getPaddingLeft(),
