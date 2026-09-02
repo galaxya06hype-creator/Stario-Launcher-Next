@@ -252,7 +252,16 @@ fun ChatInput(
                                 modifier = Modifier,
                             )
 
-                            // Search
+                            // Fix toggle thinking depth ngaruh - tampil selalu, pill2 rapet pill1
+                            ReasoningButton(
+                                reasoningLevel = assistant.reasoningLevel,
+                                onUpdateReasoningLevel = {
+                                    onUpdateAssistant(assistant.copy(reasoningLevel = it))
+                                },
+                                onlyIcon = true,
+                            )
+
+                            // Search dekat pill2 kanan - tidak pisahkan pill1 & pill2
                             val enableSearchMsg = stringResource(R.string.web_search_enabled)
                             val disableSearchMsg = stringResource(R.string.web_search_disabled)
                             val chatModel = settings.getCurrentChatModel()
@@ -274,15 +283,6 @@ fun ChatInput(
                                 },
                                 onUpdateSearchService = onUpdateSearchService,
                                 model = chatModel,
-                            )
-
-                            // Fix toggle thinking depth ngaruh - tampil selalu
-                            ReasoningButton(
-                                reasoningLevel = assistant.reasoningLevel,
-                                onUpdateReasoningLevel = {
-                                    onUpdateAssistant(assistant.copy(reasoningLevel = it))
-                                },
-                                onlyIcon = true,
                             )
 
                         }
