@@ -20,11 +20,17 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.PermanentNavigationDrawer
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SheetValue
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import dev.chrisbanes.haze.HazeInput
+import dev.chrisbanes.haze.blur.HazeBlurStyle
+import dev.chrisbanes.haze.blur.hazeBlur
+import dev.chrisbanes.haze.blur.material3.Material3
 import androidx.compose.material3.adaptive.currentWindowDpSize
 import androidx.compose.material3.rememberBottomSheetState
 import androidx.compose.material3.rememberDrawerState
@@ -311,6 +317,7 @@ private fun ChatPageContent(
                     bigScreen = bigScreen,
                     drawerState = drawerState,
                     previewMode = previewMode,
+                    hazeState = hazeState,
                     onNewChat = {
                         navigateToChatPage(navController)
                     },
@@ -590,6 +597,7 @@ private fun TopBar(
     drawerState: DrawerState,
     bigScreen: Boolean,
     previewMode: Boolean,
+    hazeState: dev.chrisbanes.haze.HazeState,
     onClickMenu: () -> Unit,
     onNewChat: () -> Unit,
     onUpdateTitle: (String) -> Unit
@@ -600,6 +608,22 @@ private fun TopBar(
         onUpdateTitle(it)
     }
 
+    // Liquid Glass backdrop untuk yang lingkaran atas - sinkron Enable Blur Effect, depth + border bersilau
+    val isDark = me.rerere.rikkahub.ui.theme.LocalDarkMode.current
+    val useGlass = settings.displaySetting.enableBlurEffect
+    val glassColor = if (useGlass) {
+        if (isDark) androidx.compose.ui.graphics.Color(0x8C0A1419) else androidx.compose.ui.graphics.Color(0x8CE6F2FF) // 0.55 alpha biar backdrop kelihatan
+    } else Color.Transparent
+    val glassBorder = if (isDark) androidx.compose.ui.graphics.Color(0x33FFFFFF) else androidx.compose.ui.graphics.Color(0x4DFFFFFF)
+    val glassShape = RoundedCornerShape(bottomStart = 20.dp, bottomEnd = 20.dp)
+    androidx.compose.material3.Surface(
+        modifier = Modifier.then(if (useGlass) Modifier.hazeBlur(input = HazeInput.Sources(hazeState), style = HazeBlurStyle.Material3 { blurRadius(20.dp) }) else Modifier),
+        shape = glassShape,
+        color = glassColor,
+        tonalElevation = if (useGlass) 12.dp else 0.dp,
+        shadowElevation = if (useGlass) 12.dp else 0.dp,
+        border = if (useGlass) BorderStroke(1.dp, glassBorder) else null,
+    ) {
     TopAppBar(
         colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
         navigationIcon = {
@@ -703,4 +727,5 @@ private fun TopBar(
             }
         )
     }
+    } // close Liquid Glass Surface backdrop
 }
