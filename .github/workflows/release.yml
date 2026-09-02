@@ -33,7 +33,7 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Decode Keystore
-        if: secrets.KEYSTORE_BASE64 != ''
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > /tmp/keystore.jks
           echo "KEYSTORE_PATH=/tmp/keystore.jks" >> $GITHUB_ENV

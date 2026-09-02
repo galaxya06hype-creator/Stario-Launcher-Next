@@ -184,9 +184,9 @@ dependencies {
     // Dipilih QmDeve karena Stario pakai View XML (Recycler, SheetBehavior) bukan full Compose
     implementation 'com.qmdeve.liquidglass:core:1.0.5'
 
-    // SF Symbols 7 analog untuk Android - Material Symbols vector (iOS 26 icon parity)
-    implementation 'com.google.android.material:material:1.13.0' // sudah ada, untuk icon vektor iOS 26 style
+    // SF Symbols 7 analog - vectordrawable untuk animasi Draw On/Magic Replace
     implementation 'androidx.vectordrawable:vectordrawable:1.2.0'
+    implementation 'androidx.vectordrawable:vectordrawable-animated:1.2.0'
 
     debugImplementation 'com.prof18.rssparser:rssparser-android-debug:6.1.1'
     implementation 'com.prof18.rssparser:rssparser:6.1.1'
