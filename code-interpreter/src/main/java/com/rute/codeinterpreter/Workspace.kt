@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 import android.content.Context
 import java.io.File
@@ -17,13 +17,6 @@ class Workspace(context: Context) {
 
     fun safeInput(name: String): File = safeChild(input, name)
     fun safeOutput(name: String): File = safeChild(output, name)
-
-    fun listOutputs(): List<File> = output.listFiles()?.toList() ?: emptyList()
-
-    fun clearTemp() {
-        temp.listFiles()?.forEach { it.deleteRecursively() }
-        temp.mkdirs()
-    }
 
     private fun safeChild(base: File, name: String): File {
         require(!name.contains("..")) { "Invalid path" }

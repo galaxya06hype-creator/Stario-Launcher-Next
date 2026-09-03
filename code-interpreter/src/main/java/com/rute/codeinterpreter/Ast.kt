@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 internal sealed interface Stmt {
     data class ExprStmt(val expr: Expr) : Stmt

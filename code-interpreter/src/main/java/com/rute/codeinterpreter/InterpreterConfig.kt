@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 data class InterpreterConfig(
     val timeoutMs: Long = 5_000L,

@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 import kotlin.math.abs
 

@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 data class InterpreterResult(
     val stdout: String,

@@ -1,12 +1,13 @@
 plugins {
-    id("rikkahub.android.library")
-    alias(libs.plugins.kotlin.serialization)
+    id("com.android.library")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
-    namespace = "me.rerere.rikkahub.codeinterpreter"
-}
+    namespace = "com.rute.codeinterpreter"
+    compileSdk = 35
 
-dependencies {
-    implementation(libs.kotlinx.serialization.json)
+    defaultConfig {
+        minSdk = 24
+    }
 }

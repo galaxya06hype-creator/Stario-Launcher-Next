@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 internal enum class TokenType {
     NUMBER, STRING, IDENT,

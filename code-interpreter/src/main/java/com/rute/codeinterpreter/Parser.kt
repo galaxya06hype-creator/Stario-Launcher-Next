@@ -1,4 +1,4 @@
-package me.rerere.rikkahub.codeinterpreter
+package com.rute.codeinterpreter
 
 internal class Parser(private val tokens: List<Token>) {
     private var p = 0
