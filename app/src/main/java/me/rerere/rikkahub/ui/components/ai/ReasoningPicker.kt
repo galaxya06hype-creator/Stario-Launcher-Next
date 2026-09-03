@@ -108,7 +108,7 @@ fun ReasoningPicker(
     onDismissRequest: () -> Unit = {},
     onUpdateReasoningLevel: (ReasoningLevel) -> Unit,
 ) {
-    // PopUp kecil seperti Grok PopUp Menu.jpg - 5 visible scroll, pill 1 lengkap cek instruksi
+    // PopUp kecil seperti Grok PopUp Menu.jpg - 5 visible scroll, fix intrinsic SubcomposeLayout
     androidx.compose.material3.DropdownMenu(
         expanded = true,
         onDismissRequest = onDismissRequest,
@@ -119,11 +119,12 @@ fun ReasoningPicker(
         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        androidx.compose.foundation.lazy.LazyColumn(
-            modifier = Modifier.heightIn(max = 280.dp)
+        androidx.compose.foundation.layout.Column(
+            modifier = Modifier
+                .heightIn(max = 280.dp)
+                .verticalScroll(androidx.compose.foundation.rememberScrollState())
         ) {
-            items(levels.size) { idx ->
-                val level = levels[idx]
+            levels.forEach { level ->
                 val selected = level == reasoningLevel
                 androidx.compose.material3.DropdownMenuItem(
                     text = {
